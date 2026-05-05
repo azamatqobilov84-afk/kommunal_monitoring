@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Bosh sahifa — Kommunal monitoringi{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+  <!-- Hero balans -->
+  <div class="hero-card mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="balance-label"><i class="bi bi-wallet2"></i> Hisob balansi</div>
+        <div class="balance-amount mt-1">{{ user.balance|floatformat:0|intcomma }} <small style="font-size:18px;opacity:.8;">so'm</small></div>
+        <div class="small mt-1" style="opacity:.85;">
+          Bu oy sarflandi: <strong>{{ current_total|floatformat:0|intcomma }} so'm</strong>
+        </div>
+      </div>
+      <a href="{% url 'topup' %}" class="btn btn-light btn-sm">
+        <i class="bi bi-plus-circle"></i> To'ldirish
+      </a>
+    </div>
+  </div>
+
+  <!-- Anomaliyalar bannerlari -->
+  {% for a in anomalies %}
+    <div class="anomaly-banner {{ a.severity }} mb-3 d-flex align-items-center">
+      <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+      <div class="flex-grow-1">
+        <div class="fw-bold">{{ a.title }}</div>
+        <div class="small">{{ a.description }}</div>
+      </div>
+      <a href="{% url 'anomalies_list' %}" class="btn btn-sm btn-outline-danger">Ko'rish</a>
+    </div>
+  {% endfor %}
+
+  <!-- Pending hisoblagichlar -->
+  {% if pending_meters %}
+    <div class="alert alert-warning shadow-sm">
+      <i class="bi bi-speedometer2"></i>
+      <strong>{{ pending_meters|length }} ta hisoblagich uchun</strong> bu oy ko'rsatkich kiritilmagan.
+      <a href="{% url 'properties_list' %}" class="alert-link">Hozir kiriting →</a>
+    </div>
+  {% endif %}
+
+  <!-- Tezkor amallar -->
+  <div class="section-title">Tezkor amallar</div>
+  <div class="row g-2 mb-4">
+    {% for s in services %}
+      <div class="col-3 col-md-3 col-lg-3">
+        <a href="{% url 'payment_service' s.slug %}" class="quick-action">
+          <span class="icon-bubble" style="background: {{ s.color }};">
+            <i class="bi {{ s.icon }}"></i>
+          </span>
+          <span class="quick-name">{{ s.name }}</span>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-3">
+    <!-- Doughnut chart -->
+    <div class="col-lg-6">
+      <div class="card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 fw-bold">Bu oy xarajatlari</h5>
+          <a href="{% url 'statistics' %}" class="text-decoration-none small">Hammasi <i class="bi bi-arrow-right"></i></a>
+        </div>
+        {% if has_breakdown %}
+          <div style="position:relative; height:240px;">
+            <canvas id="breakdownChart"></canvas>
+          </div>
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-pie-chart" style="font-size:48px;opacity:.3;"></i>
+            <p class="mt-2 mb-0 small">Bu oy hali to'lovlar yo'q</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Eslatmalar -->
+    <div class="col-lg-6">
+      <div class="card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 fw-bold">Yaqin eslatmalar</h5>
+          <a href="{% url 'reminders_list' %}" class="text-decoration-none small">Boshqarish</a>
+        </div>
+        {% if upcoming_reminders %}
+          {% for ur in upcoming_reminders %}
+            <div class="tx-item">
+              <span class="svc-icon" style="background: {{ ur.reminder.service.color }};">
+                <i class="bi {{ ur.reminder.service.icon }}"></i>
+              </span>
+              <div class="tx-info">
+                <p class="tx-title">{{ ur.reminder.service.name }}</p>
+                <p class="tx-meta">Har oyning {{ ur.reminder.day_of_month }}-sanasi</p>
+              </div>
+              <span class="status-badge {% if ur.days_left <= 2 %}status-failed{% else %}status-pending{% endif %}">
+                {% if ur.days_left == 0 %}Bugun{% else %}{{ ur.days_left }} kun{% endif %}
+              </span>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-bell-slash" style="font-size:36px;opacity:.3;"></i>
+            <p class="small mt-2 mb-0">Yaqin eslatmalar yo'q</p>
+            <a href="{% url 'reminder_new' %}" class="btn btn-sm btn-outline-primary mt-2">+ Yaratish</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Oxirgi to'lovlar -->
+  <div class="section-title">Oxirgi to'lovlar</div>
+  <div class="card p-3">
+    {% if last_txs %}
+      {% for t in last_txs %}
+        <a href="{% url 'transaction_detail' t.pk %}" class="text-decoration-none text-dark">
+          <div class="tx-item">
+            <span class="svc-icon" style="background: {% if t.service %}{{ t.service.color }}{% else %}#6c757d{% endif %};">
+              <i class="bi {% if t.service %}{{ t.service.icon }}{% else %}bi-cash{% endif %}"></i>
+            </span>
+            <div class="tx-info">
+              <p class="tx-title">{{ t.service.name|default:"Boshqa" }}{% if t.property %} — {{ t.property.name }}{% endif %}</p>
+              <p class="tx-meta">{{ t.created_at|date:"d M Y, H:i" }} · {{ t.receipt_number }}</p>
+            </div>
+            <div class="text-end">
+              <div class="tx-amount {% if t.status == 'success' %}negative{% endif %}">
+                −{{ t.amount|floatformat:0|intcomma }} so'm
+              </div>
+              <span class="status-badge status-{{ t.status }} small">{{ t.get_status_display }}</span>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+      <a href="{% url 'transactions_list' %}" class="btn btn-outline-primary w-100 mt-2">
+        Barcha tranzaksiyalar <i class="bi bi-arrow-right"></i>
+      </a>
+    {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-receipt" style="font-size:48px;opacity:.3;"></i>
+        <p class="mt-2">Hali to'lovlar yo'q</p>
+        <a href="{% url 'payment_new' %}" class="btn btn-primary">Birinchi to'lovni amalga oshirish</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if has_breakdown %}
+<script>
+const breakdown = {{ breakdown_json|safe }};
+const ctx = document.getElementById('breakdownChart').getContext('2d');
+new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: breakdown.map(b => b.name),
+    datasets: [{
+      data: breakdown.map(b => b.amount),
+      backgroundColor: breakdown.map(b => b.color),
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 12, font: { size: 12 } } },
+      tooltip: {
+        callbacks: {
+          label: (c) => c.label + ': ' + c.parsed.toLocaleString('uz-UZ') + " so'm"
+        }
+      }
+    },
+    cutout: '60%'
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

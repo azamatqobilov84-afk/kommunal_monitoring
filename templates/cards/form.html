@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Yangi karta{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 500px;">
+  <h3 class="fw-bold mb-3"><i class="bi bi-credit-card-2-front text-primary"></i> Yangi karta</h3>
+  <div class="card p-4">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">{{ form.card_type.label }}</label>
+        {{ form.card_type }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.full_number.label }}</label>
+        {{ form.full_number }}
+        {% if form.full_number.errors %}<div class="text-danger small">{{ form.full_number.errors.0 }}</div>{% endif %}
+        <div class="form-text">Oxirgi 4 raqami saqlanadi (xavfsizlik uchun)</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.holder_name.label }}</label>
+        {{ form.holder_name }}
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label class="form-label">{{ form.expiry_month.label }}</label>
+          {{ form.expiry_month }}
+        </div>
+        <div class="col-6">
+          <label class="form-label">{{ form.expiry_year.label }}</label>
+          {{ form.expiry_year }}
+        </div>
+      </div>
+      <div class="form-check mb-3">
+        {{ form.is_primary }}
+        <label class="form-check-label">{{ form.is_primary.label }}</label>
+      </div>
+      <div class="alert alert-info small">
+        <i class="bi bi-shield-check"></i> Karta ma'lumotlari xavfsiz saqlanadi —
+        faqat oxirgi 4 raqam ko'rinadi.
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">
+          <i class="bi bi-check-circle"></i> Saqlash
+        </button>
+        <a href="{% url 'cards_list' %}" class="btn btn-outline-secondary">Bekor</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

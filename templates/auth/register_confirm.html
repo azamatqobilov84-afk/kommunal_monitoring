@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Tasdiqlash{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <h1><i class="bi bi-shield-check text-primary"></i> Tasdiqlash</h1>
+    <p class="subtitle"><strong>{{ phone }}</strong> raqamiga yuborilgan 6 xonali kodni kiriting va profil ma'lumotlarini to'ldiring.</p>
+    <div class="alert alert-info small">
+      <i class="bi bi-info-circle"></i> <strong>Mock rejim:</strong> kodni Django serverining
+      konsol/terminalida ko'rasiz.
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">{{ form.code.label }}</label>
+        {{ form.code }}
+        {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label class="form-label">{{ form.first_name.label }}</label>
+          {{ form.first_name }}
+        </div>
+        <div class="col-6">
+          <label class="form-label">{{ form.last_name.label }}</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.password.label }}</label>
+        {{ form.password }}
+        {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg w-100 mb-2">
+        Tasdiqlash va kirish <i class="bi bi-check-circle"></i>
+      </button>
+      <a href="{% url 'register' %}" class="btn btn-link w-100">Telefon raqamni o'zgartirish</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

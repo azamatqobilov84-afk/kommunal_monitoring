@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Profil{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 700px;">
+  <div class="card p-4 text-center">
+    <span class="avatar-circle mx-auto mb-3" style="width: 96px; height: 96px; font-size: 32px;">
+      {{ user.initials }}
+    </span>
+    <h3 class="fw-bold mb-1">{{ user.display_name }}</h3>
+    <div class="text-muted">{{ user.phone }}</div>
+    {% if user.email %}<div class="text-muted small">{{ user.email }}</div>{% endif %}
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-6">
+      <a href="{% url 'settings' %}" class="quick-action">
+        <span class="icon-bubble" style="background: #0066ff;"><i class="bi bi-gear"></i></span>
+        <span class="quick-name">Sozlamalar</span>
+      </a>
+    </div>
+    <div class="col-6">
+      <a href="{% url 'cards_list' %}" class="quick-action">
+        <span class="icon-bubble" style="background: #22c55e;"><i class="bi bi-credit-card"></i></span>
+        <span class="quick-name">Kartalarim</span>
+      </a>
+    </div>
+    <div class="col-6">
+      <a href="{% url 'family_list' %}" class="quick-action">
+        <span class="icon-bubble" style="background: #f59e0b;"><i class="bi bi-people"></i></span>
+        <span class="quick-name">Oilam</span>
+      </a>
+    </div>
+    <div class="col-6">
+      <a href="{% url 'auto_payments_list' %}" class="quick-action">
+        <span class="icon-bubble" style="background: #8b5cf6;"><i class="bi bi-arrow-repeat"></i></span>
+        <span class="quick-name">Avto-to'lov</span>
+      </a>
+    </div>
+    <div class="col-6">
+      <a href="{% url 'reminders_list' %}" class="quick-action">
+        <span class="icon-bubble" style="background: #ef4444;"><i class="bi bi-alarm"></i></span>
+        <span class="quick-name">Eslatmalar</span>
+      </a>
+    </div>
+    <div class="col-6">
+      <a href="{% url 'tariffs_list' %}" class="quick-action">
+        <span class="icon-bubble" style="background: #6b7280;"><i class="bi bi-tag"></i></span>
+        <span class="quick-name">Tariflar</span>
+      </a>
+    </div>
+  </div>
+
+  <a href="{% url 'logout' %}" class="btn btn-outline-danger w-100 mt-3">
+    <i class="bi bi-box-arrow-right"></i> Chiqish
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Yangi avto-to'lov{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 500px;">
+  <h3 class="fw-bold mb-3"><i class="bi bi-arrow-repeat text-primary"></i> Avtomatik to'lov</h3>
+  <div class="card p-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">{{ form.service.label }}</label>
+        {{ form.service }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.property.label }}</label>
+        {{ form.property }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.card.label }}</label>
+        {{ form.card }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.day_of_month.label }}</label>
+        {{ form.day_of_month }}
+        <div class="form-text">Oyning qaysi kunida to'lov amalga oshsin</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.max_amount.label }}</label>
+        {{ form.max_amount }}
+        <div class="form-text">Bu summadan ko'p bo'lsa, qo'lda tasdiqlatadi</div>
+      </div>
+      <div class="form-check mb-3">
+        {{ form.is_active }}
+        <label class="form-check-label">{{ form.is_active.label }}</label>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">Saqlash</button>
+        <a href="{% url 'auto_payments_list' %}" class="btn btn-outline-secondary">Bekor</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Anomaliyalar{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle text-danger"></i> Anomaliyalar</h3>
+    <div class="btn-group">
+      <a href="?show=open" class="btn btn-sm {% if show == 'open' %}btn-primary{% else %}btn-outline-primary{% endif %}">Ochiq</a>
+      <a href="?show=resolved" class="btn btn-sm {% if show == 'resolved' %}btn-primary{% else %}btn-outline-primary{% endif %}">Hal qilingan</a>
+      <a href="?show=all" class="btn btn-sm {% if show == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">Hammasi</a>
+    </div>
+  </div>
+
+  {% if anomalies %}
+    {% for a in anomalies %}
+      <div class="anomaly-banner {{ a.severity }} mb-3">
+        <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+          <div class="flex-grow-1">
+            <div class="fw-bold">
+              <i class="bi bi-exclamation-triangle-fill"></i> {{ a.title }}
+              <span class="badge bg-{% if a.severity == 'high' %}danger{% elif a.severity == 'medium' %}warning text-dark{% else %}info{% endif %} ms-2">
+                {{ a.get_severity_display }}
+              </span>
+            </div>
+            <p class="mb-1">{{ a.description }}</p>
+            <small class="text-muted">{{ a.detected_at|date:"d M Y, H:i" }}
+              {% if a.meter %}· {{ a.meter.service.name }} ({{ a.meter.property.name }}){% endif %}
+            </small>
+          </div>
+          {% if not a.is_resolved %}
+            <form method="post" action="{% url 'anomaly_resolve' a.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-success">
+                <i class="bi bi-check"></i> Hal qilindi
+              </button>
+            </form>
+          {% else %}
+            <span class="badge bg-success">✓ Hal qilingan</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="card p-5 text-center">
+      <i class="bi bi-check-circle" style="font-size:64px;color:#22c55e;opacity:.6;"></i>
+      <h4 class="mt-3">Anomaliyalar yo'q</h4>
+      <p class="text-muted">Tizim sarflaringizni doimo kuzatadi va g'ayritabiiy holatlarda
+         sizni ogohlantiradi.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

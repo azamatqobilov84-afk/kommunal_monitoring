@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Statistika{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h3 class="fw-bold mb-0"><i class="bi bi-bar-chart-line text-primary"></i> Statistika</h3>
+    <form method="get" class="d-flex align-items-center gap-2">
+      <label class="small text-muted mb-0">Yil:</label>
+      <select name="year" onchange="this.form.submit()" class="form-select form-select-sm">
+        {% for y in available_years %}
+          <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <!-- Yillik xulosa -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4 col-6">
+      <div class="card p-3">
+        <div class="small text-muted">Yillik jami</div>
+        <div class="h4 fw-bold mb-0">{{ year_total|floatformat:0|intcomma }} so'm</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="card p-3">
+        <div class="small text-muted">Eng qimmat oy</div>
+        <div class="h4 fw-bold mb-0 text-danger">{{ most_expensive_month }}</div>
+        <div class="small text-muted">{{ most_expensive_amount|floatformat:0|intcomma }} so'm</div>
+      </div>
+    </div>
+    <div class="col-md-4 col-12">
+      <div class="card p-3">
+        <div class="small text-muted">Eng tejamkor oy</div>
+        <div class="h4 fw-bold mb-0 text-success">{{ cheapest_month }}</div>
+        <div class="small text-muted">{{ cheapest_amount|floatformat:0|intcomma }} so'm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hududiy taqqoslash -->
+  <div class="card p-3 mb-3" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-trophy-fill text-success me-3" style="font-size: 32px;"></i>
+      <div>
+        <strong>Yaxshi natija!</strong><br>
+        <span class="small">Sizning oilangiz hududdagi o'rtachadan
+          <strong>{{ region_average_diff|stringformat:"+d" }}%</strong> kam sarflaydi.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Oylik chiziqli grafik -->
+  <div class="card p-3 mb-3">
+    <h5 class="fw-bold mb-3">Oylik xarajatlar — {{ year }}</h5>
+    <div style="position:relative; height:300px;">
+      <canvas id="monthlyTotalChart"></canvas>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <!-- Doughnut bu oy -->
+    <div class="col-lg-6">
+      <div class="card p-3 h-100">
+        <h5 class="fw-bold mb-3">Bu oy taqsimoti</h5>
+        <div style="position:relative; height:280px;">
+          <canvas id="breakdownChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bar — taqqoslash -->
+    <div class="col-lg-6">
+      <div class="card p-3 h-100">
+        <h5 class="fw-bold mb-3">Sarflar taqqoslash</h5>
+        <div style="position:relative; height:280px;">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Xizmat bo'yicha sarflar -->
+  <div class="card p-3">
+    <h5 class="fw-bold mb-3">Xizmatlar bo'yicha sarflar — {{ year }}</h5>
+    <div style="position:relative; height:340px;">
+      <canvas id="byServiceChart"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const months = {{ months|safe }};
+const monthlyTotals = {{ monthly_totals_json|safe }};
+const monthlyData = {{ monthly_data_json|safe }};
+const breakdown = {{ breakdown_json|safe }};
+const barLabels = {{ bar_labels_json|safe }};
+const barCurrent = {{ bar_current_json|safe }};
+const barPrevMonth = {{ bar_prev_month_json|safe }};
+const barPrevYear = {{ bar_prev_year_json|safe }};
+
+// Oylik jami chart
+new Chart(document.getElementById('monthlyTotalChart'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [{
+      label: 'Oylik xarajat (so\'m)',
+      data: monthlyTotals,
+      borderColor: '#0066ff',
+      backgroundColor: 'rgba(0, 102, 255, 0.15)',
+      fill: true, tension: 0.3, borderWidth: 3,
+      pointRadius: 5, pointBackgroundColor: '#0066ff',
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: c => c.parsed.y.toLocaleString('uz-UZ') + " so'm"
+        }
+      }
+    },
+    scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000) + 'k' } } }
+  }
+});
+
+// Doughnut
+if (breakdown.length > 0) {
+  new Chart(document.getElementById('breakdownChart'), {
+    type: 'doughnut',
+    data: {
+      labels: breakdown.map(b => b.name),
+      datasets: [{
+        data: breakdown.map(b => b.amount),
+        backgroundColor: breakdown.map(b => b.color),
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed.toLocaleString('uz-UZ') + ' so\'m' } }
+      }
+    }
+  });
+} else {
+  document.getElementById('breakdownChart').parentElement.innerHTML =
+    '<div class="text-center py-5 text-muted"><i class="bi bi-pie-chart" style="font-size:48px;opacity:.3;"></i><p class="mt-2 small">Bu oy ma\'lumotlari yo\'q</p></div>';
+}
+
+// Bar — taqqoslash
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: barLabels,
+    datasets: [
+      { label: 'Bu oy', data: barCurrent, backgroundColor: '#0066ff' },
+      { label: 'O\'tgan oy', data: barPrevMonth, backgroundColor: '#94a3b8' },
+      { label: 'O\'tgan yil shu oy', data: barPrevYear, backgroundColor: '#cbd5e1' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
+// Xizmatlar bo'yicha — multi-line
+const datasets = [];
+for (const [name, info] of Object.entries(monthlyData)) {
+  datasets.push({
+    label: name, data: info.data,
+    borderColor: info.color, backgroundColor: info.color + '20',
+    fill: false, tension: 0.3, borderWidth: 2,
+  });
+}
+new Chart(document.getElementById('byServiceChart'), {
+  type: 'line',
+  data: { labels: months, datasets: datasets },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y.toLocaleString('uz-UZ') + ' so\'m' } }
+    },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+</script>
+{% endblock %}

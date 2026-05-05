@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Hisobni to'ldirish{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 500px;">
+  <h3 class="fw-bold mb-3"><i class="bi bi-wallet2 text-primary"></i> Hisobni to'ldirish</h3>
+
+  <div class="hero-card mb-3">
+    <div class="balance-label"><i class="bi bi-wallet2"></i> Joriy balans</div>
+    <div class="balance-amount">{{ user.balance|floatformat:0|intcomma }} so'm</div>
+  </div>
+
+  <div class="card p-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Summa (so'm)</label>
+        <input type="number" name="amount" class="form-control form-control-lg" step="1000" min="1000" required>
+        <div class="d-flex gap-2 mt-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary preset" data-val="50000">50 ming</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary preset" data-val="100000">100 ming</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary preset" data-val="500000">500 ming</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary preset" data-val="1000000">1 mln</button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Karta orqali</label>
+        <select name="card" class="form-select" required>
+          <option value="">— Kartani tanlang —</option>
+          {% for c in cards %}
+            <option value="{{ c.pk }}">
+              {{ c.get_card_type_display }} •••• {{ c.number_last4 }}
+              ({{ c.balance|floatformat:0|intcomma }} so'm)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg w-100">
+        <i class="bi bi-arrow-down-circle"></i> To'ldirish
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.preset').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelector('input[name="amount"]').value = b.dataset.val;
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Oila a'zolari{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <h3 class="fw-bold mb-3"><i class="bi bi-people-fill text-primary"></i> Oila a'zolari</h3>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card p-3">
+        <h5 class="fw-bold mb-3">Mening a'zolarim</h5>
+        {% if invites %}
+          {% for fm in invites %}
+            <div class="tx-item">
+              <span class="avatar-circle">{{ fm.member.initials }}</span>
+              <div class="tx-info ms-2">
+                <p class="tx-title">{{ fm.member.display_name }}</p>
+                <p class="tx-meta">{{ fm.property.name }} · {{ fm.get_role_display }}</p>
+              </div>
+              <form method="post" action="{% url 'family_remove' fm.pk %}"
+                    onsubmit="return confirm('Bu a\'zoni o\'chirishni tasdiqlaysizmi?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-x"></i>
+                </button>
+              </form>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small mb-0">Hali a'zolar qo'shmagansiz</p>
+        {% endif %}
+      </div>
+
+      {% if member_in %}
+      <div class="card p-3 mt-3">
+        <h5 class="fw-bold mb-3">Men a'zo bo'lgan oilalar</h5>
+        {% for fm in member_in %}
+          <div class="tx-item">
+            <span class="avatar-circle">{{ fm.owner.initials }}</span>
+            <div class="tx-info ms-2">
+              <p class="tx-title">{{ fm.owner.display_name }}</p>
+              <p class="tx-meta">{{ fm.property.name }} · {{ fm.get_role_display }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card p-3">
+        <h5 class="fw-bold mb-3"><i class="bi bi-person-plus"></i> Yangi a'zo qo'shish</h5>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">{{ form.phone.label }}</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}<div class="text-danger small">{{ form.phone.errors.0 }}</div>{% endif %}
+            <div class="form-text">A'zo avval ro'yxatdan o'tgan bo'lishi kerak</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ form.property.label }}</label>
+            {{ form.property }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ form.role.label }}</label>
+            {{ form.role }}
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-plus"></i> Qo'shish
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

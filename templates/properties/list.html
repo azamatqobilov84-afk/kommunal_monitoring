@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Manzillarim{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0"><i class="bi bi-building text-primary"></i> Manzillarim</h3>
+    <a href="{% url 'property_new' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Yangi</a>
+  </div>
+
+  {% if properties %}
+    <div class="row g-3">
+      {% for p in properties %}
+        <div class="col-md-6">
+          <div class="card p-3">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h5 class="mb-1">
+                  <i class="bi bi-house-door-fill text-primary"></i> {{ p.name }}
+                  {% if p.is_primary %}<span class="badge bg-primary ms-1">Asosiy</span>{% endif %}
+                </h5>
+                <div class="text-muted small mb-2">{{ p.address }}</div>
+                <div class="d-flex gap-3 small">
+                  <span><i class="bi bi-door-closed"></i> {{ p.rooms }} xona</span>
+                  <span><i class="bi bi-rulers"></i> {{ p.area_sqm }} m²</span>
+                  <span><i class="bi bi-speedometer2"></i> {{ p.meters.count }} hisoblagich</span>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+              <a href="{% url 'property_detail' p.pk %}" class="btn btn-sm btn-primary flex-grow-1">
+                <i class="bi bi-eye"></i> Ochish
+              </a>
+              <a href="{% url 'property_edit' p.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="post" action="{% url 'property_delete' p.pk %}" class="d-inline"
+                    onsubmit="return confirm('Manzilni o\'chirishni tasdiqlaysizmi?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card p-5 text-center">
+      <i class="bi bi-house-add" style="font-size:64px;opacity:.3;"></i>
+      <h4 class="mt-3">Hali manzillar qo'shilmagan</h4>
+      <p class="text-muted">Hisoblagichlar va to'lovlarni boshqarish uchun avval manzil qo'shing.</p>
+      <a href="{% url 'property_new' %}" class="btn btn-primary mx-auto" style="max-width:300px;">
+        <i class="bi bi-plus"></i> Birinchi manzilni qo'shish
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

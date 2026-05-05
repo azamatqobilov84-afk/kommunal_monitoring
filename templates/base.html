@@ -1,0 +1,126 @@
+{% load humanize static %}<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>{% block title %}Kommunal monitoringi{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top d-none d-lg-flex">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold text-primary" href="{% url 'dashboard' %}">
+      <i class="bi bi-house-heart-fill"></i> Kommunal monitoringi
+    </a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2"></i> Bosh sahifa</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'properties_list' %}"><i class="bi bi-building"></i> Manzillar</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'transactions_list' %}"><i class="bi bi-clock-history"></i> Tarix</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'statistics' %}"><i class="bi bi-bar-chart-line"></i> Statistika</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'cards_list' %}"><i class="bi bi-credit-card-2-front"></i> Kartalar</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'anomalies_list' %}"><i class="bi bi-exclamation-triangle"></i> Anomaliyalar
+          {% if open_anomalies_count %}<span class="badge bg-danger ms-1">{{ open_anomalies_count }}</span>{% endif %}
+        </a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'reports' %}"><i class="bi bi-file-earmark-text"></i> Hisobotlar</a></li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link position-relative" href="{% url 'notifications_list' %}">
+            <i class="bi bi-bell-fill fs-5"></i>
+            {% if unread_notifications_count %}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ unread_notifications_count }}
+              </span>
+            {% endif %}
+          </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" href="#">
+            <span class="avatar-circle me-2">{{ user.initials }}</span>
+            <span>{{ user.display_name }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow">
+            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> Profil</a></li>
+            <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="bi bi-gear"></i> Sozlamalar</a></li>
+            <li><a class="dropdown-item" href="{% url 'family_list' %}"><i class="bi bi-people"></i> Oila</a></li>
+            <li><a class="dropdown-item" href="{% url 'auto_payments_list' %}"><i class="bi bi-arrow-repeat"></i> Avto-to'lovlar</a></li>
+            <li><a class="dropdown-item" href="{% url 'reminders_list' %}"><i class="bi bi-alarm"></i> Eslatmalar</a></li>
+            <li><a class="dropdown-item" href="{% url 'tariffs_list' %}"><i class="bi bi-tag"></i> Tariflar</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Chiqish</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobil yuqori bar -->
+<nav class="navbar navbar-light bg-white border-bottom sticky-top d-flex d-lg-none px-3">
+  <a class="navbar-brand fw-bold text-primary" href="{% url 'dashboard' %}">
+    <i class="bi bi-house-heart-fill"></i> Kommunal
+  </a>
+  <div class="d-flex align-items-center gap-3">
+    <a href="{% url 'notifications_list' %}" class="position-relative text-dark">
+      <i class="bi bi-bell-fill fs-4"></i>
+      {% if unread_notifications_count %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger small">{{ unread_notifications_count }}</span>
+      {% endif %}
+    </a>
+    <a href="{% url 'profile' %}" class="text-dark">
+      <span class="avatar-circle">{{ user.initials }}</span>
+    </a>
+  </div>
+</nav>
+{% endif %}
+
+<main class="page-main {% if user.is_authenticated %}has-bottom-nav{% endif %}">
+  {% if messages %}
+    <div class="container py-2">
+      {% for m in messages %}
+        <div class="alert alert-{{ m.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+          {{ m }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</main>
+
+{% if user.is_authenticated %}
+<!-- Mobil pastki nav -->
+<nav class="bottom-nav d-lg-none">
+  <a href="{% url 'dashboard' %}" class="bottom-nav-item">
+    <i class="bi bi-grid-1x2-fill"></i><span>Bosh sahifa</span>
+  </a>
+  <a href="{% url 'transactions_list' %}" class="bottom-nav-item">
+    <i class="bi bi-clock-history"></i><span>Tarix</span>
+  </a>
+  <a href="{% url 'payment_new' %}" class="bottom-nav-item bottom-nav-fab">
+    <i class="bi bi-plus-lg"></i>
+  </a>
+  <a href="{% url 'statistics' %}" class="bottom-nav-item">
+    <i class="bi bi-bar-chart-fill"></i><span>Statistika</span>
+  </a>
+  <a href="{% url 'profile' %}" class="bottom-nav-item">
+    <i class="bi bi-person-fill"></i><span>Profil</span>
+  </a>
+</nav>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

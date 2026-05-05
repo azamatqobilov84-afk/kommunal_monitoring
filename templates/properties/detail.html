@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ property.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+    <div>
+      <h3 class="fw-bold mb-1">
+        <i class="bi bi-house-door-fill text-primary"></i> {{ property.name }}
+        {% if property.is_primary %}<span class="badge bg-primary">Asosiy</span>{% endif %}
+      </h3>
+      <div class="text-muted">{{ property.address }}</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'property_edit' property.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+      <a href="{% url 'meter_new' property.pk %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Hisoblagich
+      </a>
+    </div>
+  </div>
+
+  <!-- Hisoblagichlar -->
+  <h5 class="section-title">Hisoblagichlar</h5>
+  {% if meters %}
+    <div class="row g-3 mb-4">
+      {% for m in meters %}
+        {% with last=m.last_reading %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card p-3 h-100">
+            <div class="d-flex align-items-center mb-2">
+              <span class="svc-icon me-2" style="background: {{ m.service.color }};">
+                <i class="bi {{ m.service.icon }}"></i>
+              </span>
+              <div class="flex-grow-1">
+                <div class="fw-bold">{{ m.service.name }}</div>
+                <div class="small text-muted">№ {{ m.serial_number }}</div>
+              </div>
+            </div>
+            <div class="bg-light rounded p-2 my-2">
+              <div class="d-flex justify-content-between align-items-end">
+                <span class="small text-muted">Joriy ko'rsatkich</span>
+                <span class="fw-bold">{{ m.current_value|floatformat:2 }} {{ m.service.unit }}</span>
+              </div>
+              {% if last %}
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                  <span class="small text-muted">Oxirgi sarf</span>
+                  <span class="small">{{ last.consumption|floatformat:1 }} {{ m.service.unit }}</span>
+                </div>
+                <div class="small text-muted mt-1">{{ last.reading_date|date:"d M Y" }}</div>
+              {% else %}
+                <div class="small text-warning"><i class="bi bi-info-circle"></i> Hali yozuv yo'q</div>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              <a href="{% url 'meter_reading_new' m.pk %}" class="btn btn-sm btn-primary flex-grow-1">
+                <i class="bi bi-plus"></i> Ko'rsatkich
+              </a>
+              <a href="{% url 'meter_history' m.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-clock-history"></i> Tarix
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card p-4 text-center mb-4">
+      <i class="bi bi-speedometer2" style="font-size:48px;opacity:.3;"></i>
+      <p class="mt-2 text-muted">Hali hisoblagichlar qo'shilmagan</p>
+      <a href="{% url 'meter_new' property.pk %}" class="btn btn-primary mx-auto" style="max-width:300px;">
+        <i class="bi bi-plus"></i> Birinchi hisoblagichni qo'shish
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- Tranzaksiyalar -->
+  {% if txs %}
+  <h5 class="section-title">Oxirgi to'lovlar</h5>
+  <div class="card p-3">
+    {% for t in txs %}
+      <a href="{% url 'transaction_detail' t.pk %}" class="text-decoration-none text-dark">
+        <div class="tx-item">
+          <span class="svc-icon" style="background: {% if t.service %}{{ t.service.color }}{% else %}#6c757d{% endif %};">
+            <i class="bi {% if t.service %}{{ t.service.icon }}{% else %}bi-cash{% endif %}"></i>
+          </span>
+          <div class="tx-info">
+            <p class="tx-title">{{ t.service.name|default:"To'lov" }}</p>
+            <p class="tx-meta">{{ t.created_at|date:"d M Y, H:i" }}</p>
+          </div>
+          <div class="text-end">
+            <div class="tx-amount negative">−{{ t.amount|floatformat:0|intcomma }} so'm</div>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

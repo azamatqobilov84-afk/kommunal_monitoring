@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Sozlamalar{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 700px;">
+  <h3 class="fw-bold mb-3"><i class="bi bi-gear text-primary"></i> Sozlamalar</h3>
+
+  <!-- Profil -->
+  <div class="card p-4 mb-3">
+    <h5 class="fw-bold mb-3">Profil ma'lumotlari</h5>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="profile">
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Ism</label>
+          {{ form.first_name }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Familiya</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Telefon</label>
+          {{ form.phone }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          {{ form.email }}
+        </div>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-8">
+          <label class="form-label">Manzil</label>
+          {{ form.address }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Hudud</label>
+          {{ form.region }}
+        </div>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Til</label>
+          {{ form.language }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Avatar</label>
+          {{ form.avatar }}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Anomaliya chegarasi (%)</label>
+        {{ form.notify_threshold_percent }}
+        <div class="form-text">Sarf shu foizdan ortsa, sizni ogohlantirish</div>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Saqlash</button>
+    </form>
+  </div>
+
+  <!-- Parol -->
+  <div class="card p-4 mb-3">
+    <h5 class="fw-bold mb-3">Parolni o'zgartirish</h5>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="password">
+      <div class="mb-3">
+        <label class="form-label">{{ pwd_form.old_password.label }}</label>
+        {{ pwd_form.old_password }}
+        {% if pwd_form.old_password.errors %}<div class="text-danger small">{{ pwd_form.old_password.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">{{ pwd_form.new_password.label }}</label>
+          {{ pwd_form.new_password }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ pwd_form.new_password2.label }}</label>
+          {{ pwd_form.new_password2 }}
+        </div>
+      </div>
+      {% if pwd_form.non_field_errors %}<div class="alert alert-danger small">{{ pwd_form.non_field_errors.0 }}</div>{% endif %}
+      <button type="submit" class="btn btn-primary"><i class="bi bi-key"></i> Parolni yangilash</button>
+    </form>
+  </div>
+
+  <!-- Hisobni o'chirish -->
+  <div class="card p-4 border-danger">
+    <h5 class="fw-bold mb-2 text-danger">Xavfli zona</h5>
+    <p class="small text-muted">Hisobni o'chirish — barcha ma'lumotlar (manzillar, hisoblagichlar,
+       to'lovlar, kartalar) butunlay o'chiriladi va tiklanmaydi.</p>
+    <form method="post" onsubmit="return confirm('Haqiqatan ham hisobni o\'chirmoqchimisiz? Bu amalni qaytarib bo\'lmaydi!');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete_account">
+      <button type="submit" class="btn btn-outline-danger">
+        <i class="bi bi-trash"></i> Hisobni o'chirish
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

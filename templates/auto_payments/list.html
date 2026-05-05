@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Avtomatik to'lovlar{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0"><i class="bi bi-arrow-repeat text-primary"></i> Avtomatik to'lovlar</h3>
+    <a href="{% url 'auto_payment_new' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Yangi</a>
+  </div>
+
+  {% if items %}
+    <div class="row g-3">
+      {% for ap in items %}
+        <div class="col-md-6">
+          <div class="card p-3">
+            <div class="d-flex align-items-center gap-3">
+              <span class="svc-icon" style="background: {{ ap.service.color }};">
+                <i class="bi {{ ap.service.icon }}"></i>
+              </span>
+              <div class="flex-grow-1">
+                <strong>{{ ap.service.name }}</strong>
+                <div class="small text-muted">
+                  {{ ap.property.name }} · har oyning {{ ap.day_of_month }}-i
+                </div>
+                <div class="small">
+                  Karta: <strong>{{ ap.card.get_card_type_display }} •••• {{ ap.card.number_last4 }}</strong>
+                </div>
+                <div class="small text-primary">
+                  Maks. summa: <strong>{{ ap.max_amount|floatformat:0|intcomma }} so'm</strong>
+                </div>
+              </div>
+              <div>
+                <span class="badge bg-{% if ap.is_active %}success{% else %}secondary{% endif %}">
+                  {% if ap.is_active %}Faol{% else %}O'chiq{% endif %}
+                </span>
+              </div>
+            </div>
+            <div class="mt-2 text-end">
+              <form method="post" action="{% url 'auto_payment_delete' ap.pk %}" class="d-inline"
+                    onsubmit="return confirm('O\'chirilsinmi?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i> O'chirish
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card p-5 text-center">
+      <i class="bi bi-arrow-repeat" style="font-size:64px;opacity:.3;"></i>
+      <h4 class="mt-3">Avtomatik to'lovlar yo'q</h4>
+      <p class="text-muted">Har oyning belgilangan kunida avtomatik to'lov amalga oshiriladi</p>
+      <a href="{% url 'auto_payment_new' %}" class="btn btn-primary mx-auto" style="max-width:300px;">+ Sozlash</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

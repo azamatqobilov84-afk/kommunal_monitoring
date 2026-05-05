@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Tariflar{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <h3 class="fw-bold mb-3"><i class="bi bi-tag-fill text-primary"></i> Joriy tariflar — {{ region }}</h3>
+
+  <div class="card p-3">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Xizmat</th>
+          <th>Turi</th>
+          <th>Narx</th>
+          <th>Birlik</th>
+          <th>Boshlangan</th>
+          <th>Hudud</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tariffs %}
+          <tr>
+            <td>
+              <span class="svc-icon" style="background: {{ t.service.color }}; width: 32px; height: 32px; font-size: 14px;">
+                <i class="bi {{ t.service.icon }}"></i>
+              </span>
+              {{ t.service.name }}
+            </td>
+            <td>{{ t.get_tariff_type_display }}</td>
+            <td><strong>{{ t.price_per_unit|floatformat:0|intcomma }}</strong> so'm</td>
+            <td>{{ t.service.unit }}</td>
+            <td>{{ t.valid_from|date:"d M Y" }}</td>
+            <td>{{ t.region }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center py-4 text-muted">Tariflar topilmadi</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert alert-info small mt-3">
+    <i class="bi bi-info-circle"></i> Tariflarni admin paneli orqali boshqarish mumkin.
+    Tarif o'zgarganda — sarflar avtomatik yangi narxga ko'ra hisoblanadi.
+  </div>
+</div>
+{% endblock %}

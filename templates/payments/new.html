@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Yangi to'lov{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 600px;">
+  <h3 class="fw-bold mb-3">
+    <i class="bi bi-credit-card-fill text-primary"></i> Yangi to'lov
+    {% if initial_service %}
+      — <span style="color: {{ initial_service.color }};">{{ initial_service.name }}</span>
+    {% endif %}
+  </h3>
+
+  <div class="card p-4">
+    <form method="post" novalidate id="payment-form">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">{{ form.service.label }}</label>
+        {{ form.service }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.property.label }} (ixtiyoriy)</label>
+        {{ form.property }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.account_number.label }}</label>
+        {{ form.account_number }}
+        <div class="form-text">Tashkilot bergan shaxsiy hisob raqami</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.amount.label }}</label>
+        {{ form.amount }}
+        <div class="d-flex gap-2 mt-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary preset-amount" data-val="50000">50 ming</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary preset-amount" data-val="100000">100 ming</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary preset-amount" data-val="250000">250 ming</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary preset-amount" data-val="500000">500 ming</button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.card.label }}</label>
+        {{ form.card }}
+        {% if not form.card.field.queryset.exists %}
+          <div class="alert alert-warning mt-2 small">
+            <i class="bi bi-exclamation-triangle"></i> Hali kartalaringiz yo'q.
+            <a href="{% url 'card_new' %}">Karta qo'shish</a>
+          </div>
+        {% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.comment.label }}</label>
+        {{ form.comment }}
+      </div>
+      <div class="alert alert-info small">
+        <i class="bi bi-info-circle"></i> <strong>Mock to'lov:</strong> Haqiqiy pul yechilmaydi —
+        faqat virtual karta balansidan kamaytiriladi.
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+          <i class="bi bi-check-circle"></i> To'lash
+        </button>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg">Bekor</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.preset-amount').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelector('input[name="amount"]').value = btn.dataset.val;
+  });
+});
+</script>
+{% endblock %}

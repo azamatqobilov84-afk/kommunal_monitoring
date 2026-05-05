@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ meter.service.name }} tarixi{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between flex-wrap gap-2 align-items-start mb-3">
+    <h3 class="fw-bold mb-0">
+      <span class="svc-icon me-2" style="background: {{ meter.service.color }};">
+        <i class="bi {{ meter.service.icon }}"></i>
+      </span>
+      {{ meter.service.name }} — Tarix
+    </h3>
+    <a href="{% url 'meter_reading_new' meter.pk %}" class="btn btn-primary">
+      <i class="bi bi-plus"></i> Yangi yozuv
+    </a>
+  </div>
+  <div class="text-muted mb-3">
+    {{ meter.property.name }} · № {{ meter.serial_number }} · {{ meter.get_tariff_mode_display }}
+  </div>
+
+  <!-- Grafik -->
+  <div class="card p-3 mb-3">
+    <h5 class="fw-bold mb-3">Sarf dinamikasi</h5>
+    <div style="position:relative; height:280px;">
+      <canvas id="historyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Yozuvlar jadvali -->
+  <div class="card p-3">
+    <h5 class="fw-bold mb-3">Yozuvlar</h5>
+    {% if readings %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Sana</th>
+              <th>Avvalgi</th>
+              <th>Joriy</th>
+              <th>Sarf</th>
+              <th>Summa</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in readings %}
+              <tr {% if r.is_anomaly %}class="table-warning"{% endif %}>
+                <td>{{ r.reading_date|date:"d M Y" }}</td>
+                <td>{{ r.previous_value|floatformat:2 }}</td>
+                <td>{{ r.current_value|floatformat:2 }}</td>
+                <td>
+                  <strong>{{ r.consumption|floatformat:2 }}</strong> {{ meter.service.unit }}
+                  {% if r.is_anomaly %}<i class="bi bi-exclamation-triangle-fill text-danger"></i>{% endif %}
+                </td>
+                <td>{{ r.calculate_amount|floatformat:0|intcomma }} so'm</td>
+                <td class="text-muted small">{{ r.note }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-4 text-muted">
+        <i class="bi bi-clock-history" style="font-size:48px;opacity:.3;"></i>
+        <p class="mt-2">Hali yozuvlar yo'q</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const labels = {{ chart_labels|safe }};
+const data = {{ chart_data|safe }};
+if (labels.length > 0) {
+  new Chart(document.getElementById('historyChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '{{ meter.service.name }} sarfi ({{ meter.service.unit }})',
+        data: data,
+        borderColor: '{{ meter.service.color }}',
+        backgroundColor: '{{ meter.service.color }}33',
+        fill: true, tension: 0.3, borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+</script>
+{% endblock %}

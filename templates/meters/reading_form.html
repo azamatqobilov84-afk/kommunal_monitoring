@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Yangi ko'rsatkich{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 600px;">
+  <h3 class="fw-bold mb-1">
+    <span class="svc-icon me-2" style="background: {{ meter.service.color }};">
+      <i class="bi {{ meter.service.icon }}"></i>
+    </span>
+    {{ meter.service.name }} — Yangi ko'rsatkich
+  </h3>
+  <div class="text-muted mb-3">{{ meter.property.name }} · Hisoblagich № {{ meter.serial_number }}</div>
+
+  <div class="card p-4">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">{{ form.previous_value.label }} ({{ meter.service.unit }})</label>
+          {{ form.previous_value }}
+          <div class="form-text">Avtomatik to'ldirildi</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.current_value.label }} ({{ meter.service.unit }})</label>
+          {{ form.current_value }}
+          {% if form.current_value.errors %}<div class="text-danger small">{{ form.current_value.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+      <div class="alert alert-info" id="consumption-preview" style="display:none;">
+        <i class="bi bi-calculator"></i> Sarf: <strong id="consumption-val">0</strong> {{ meter.service.unit }}
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">{{ form.reading_date.label }}</label>
+          {{ form.reading_date }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.image.label }}</label>
+          {{ form.image }}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.note.label }}</label>
+        {{ form.note }}
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">
+          <i class="bi bi-check-circle"></i> Saqlash
+        </button>
+        <a href="{% url 'property_detail' meter.property.pk %}" class="btn btn-outline-secondary">Bekor</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Sarfni avtomatik hisoblash
+const prevEl = document.querySelector('input[name="previous_value"]');
+const currEl = document.querySelector('input[name="current_value"]');
+const previewEl = document.getElementById('consumption-preview');
+const valEl = document.getElementById('consumption-val');
+
+function updatePreview() {
+  const prev = parseFloat(prevEl.value || 0);
+  const curr = parseFloat(currEl.value || 0);
+  if (curr > prev) {
+    valEl.textContent = (curr - prev).toFixed(2);
+    previewEl.style.display = 'block';
+  } else if (curr > 0 && curr < prev) {
+    valEl.textContent = '⚠️ Joriy ko\'rsatkich avvalgisidan kichik!';
+    previewEl.style.display = 'block';
+    previewEl.className = 'alert alert-danger';
+  } else {
+    previewEl.style.display = 'none';
+  }
+}
+currEl.addEventListener('input', updatePreview);
+</script>
+{% endblock %}

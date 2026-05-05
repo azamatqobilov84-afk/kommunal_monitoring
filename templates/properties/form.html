@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block title %}{% if is_new %}Yangi manzil{% else %}Manzilni tahrirlash{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 700px;">
+  <h3 class="fw-bold mb-3">
+    <i class="bi bi-house-add text-primary"></i>
+    {% if is_new %}Yangi manzil qo'shish{% else %}Manzilni tahrirlash{% endif %}
+  </h3>
+
+  <div class="card p-4">
+    <form method="post" novalidate id="property-form" autocomplete="off">
+      {% csrf_token %}
+
+      <!-- Manzil nomi -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">{{ form.name.label }} <span class="text-danger">*</span></label>
+        {{ form.name }}
+        <div class="form-text"><i class="bi bi-info-circle"></i> Bu nom orqali manzilni topasiz. Masalan: "Asosiy uy", "Dacha", "Ota-onamning uyi"</div>
+        {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Manzil tanlash bloki -->
+      <div class="address-section mb-3 p-3 rounded" style="background: #f0f7ff;">
+        <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-primary"></i> Manzil</h6>
+
+        <!-- Viloyat -->
+        <div class="mb-3">
+          <label class="form-label">{{ form.region.label }} <span class="text-danger">*</span></label>
+          {{ form.region }}
+          {% if form.region.errors %}<div class="text-danger small">{{ form.region.errors.0 }}</div>{% endif %}
+        </div>
+
+        <!-- Tuman -->
+        <div class="mb-3">
+          <label class="form-label">{{ form.district.label }} <span class="text-danger">*</span></label>
+          {{ form.district }}
+          <div class="form-text small text-muted" id="district-hint">
+            <i class="bi bi-arrow-up"></i> Avval viloyatni tanlang
+          </div>
+          {% if form.district.errors %}<div class="text-danger small">{{ form.district.errors.0 }}</div>{% endif %}
+        </div>
+
+        <!-- Mahalla -->
+        <div class="mb-3">
+          <label class="form-label">{{ form.mahalla.label }}</label>
+          {{ form.mahalla }}
+          <div class="form-text small">Mahalla yoki MFY nomi (ixtiyoriy)</div>
+        </div>
+
+        <!-- Ko'cha + Uy + Kvartira -->
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label">{{ form.street.label }}</label>
+            {{ form.street }}
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label">{{ form.house_number.label }}</label>
+            {{ form.house_number }}
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label">{{ form.apartment.label }}</label>
+            {{ form.apartment }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Manzil ko'rinishi (preview) -->
+      <div class="alert alert-light border mb-3" id="address-preview" style="display:none;">
+        <strong><i class="bi bi-pin-map text-primary"></i> Manzil:</strong>
+        <span id="address-preview-text" class="text-muted"></span>
+      </div>
+
+      <!-- Uy ma'lumotlari -->
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">{{ form.rooms.label }}</label>
+          {{ form.rooms }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.area_sqm.label }}</label>
+          {{ form.area_sqm }}
+        </div>
+      </div>
+
+      <!-- Asosiy belgilash -->
+      <div class="form-check mb-4">
+        {{ form.is_primary }}
+        <label class="form-check-label fw-semibold">{{ form.is_primary.label }}</label>
+        <div class="form-text small">Bosh sahifada asosiy ma'lumot sifatida ko'rsatiladi</div>
+      </div>
+
+      <!-- Tugmalar -->
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+          <i class="bi bi-check-circle"></i> Saqlash
+        </button>
+        <a href="{% url 'properties_list' %}" class="btn btn-outline-secondary btn-lg">Bekor qilish</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const regionSel = document.getElementById('id_region');
+  const districtSel = document.getElementById('id_district');
+  const districtHint = document.getElementById('district-hint');
+  const previewBox = document.getElementById('address-preview');
+  const previewText = document.getElementById('address-preview-text');
+
+  // Mavjud qiymatlarni saqlab qolish (tahrirlashda)
+  const initialDistrict = "{{ form.district.value|default:''|escapejs }}";
+
+  // Viloyat tanlanganda — tumanlarni yuklash
+  async function loadDistricts(region, selectedDistrict = '') {
+    if (!region) {
+      districtSel.innerHTML = '<option value="">— Avval viloyatni tanlang —</option>';
+      districtHint.innerHTML = '<i class="bi bi-arrow-up"></i> Avval viloyatni tanlang';
+      districtSel.disabled = true;
+      return;
+    }
+    districtSel.disabled = false;
+    districtSel.innerHTML = '<option value="">⏳ Yuklanmoqda...</option>';
+
+    try {
+      const resp = await fetch(`/api/districts/?region=${encodeURIComponent(region)}`);
+      const data = await resp.json();
+      const districts = data.districts || [];
+
+      districtSel.innerHTML = '<option value="">— Tumanni tanlang —</option>';
+      districts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        if (d === selectedDistrict) opt.selected = true;
+        districtSel.appendChild(opt);
+      });
+      districtHint.innerHTML = `<i class="bi bi-check-circle text-success"></i> ${districts.length} ta tuman/shahar mavjud`;
+    } catch (e) {
+      districtSel.innerHTML = '<option value="">Xatolik yuz berdi</option>';
+      districtHint.innerHTML = '<i class="bi bi-x-circle text-danger"></i> Tumanlarni yuklab bo\'lmadi';
+    }
+    updatePreview();
+  }
+
+  // Manzil ko'rinishini yangilash
+  function updatePreview() {
+    const region = regionSel.value;
+    const district = districtSel.value;
+    const mahalla = document.querySelector('input[name="mahalla"]').value;
+    const street = document.querySelector('input[name="street"]').value;
+    const house = document.querySelector('input[name="house_number"]').value;
+    const apt = document.querySelector('input[name="apartment"]').value;
+
+    const parts = [];
+    if (region) parts.push(region);
+    if (district) parts.push(district);
+    if (mahalla) parts.push(mahalla + ' MFY');
+    if (street) parts.push(street + ' ko\'chasi');
+    if (house) {
+      let h = house + '-uy';
+      if (apt) h += ', ' + apt + '-xona';
+      parts.push(h);
+    }
+
+    if (parts.length >= 2) {
+      previewText.textContent = parts.join(', ');
+      previewBox.style.display = 'block';
+    } else {
+      previewBox.style.display = 'none';
+    }
+  }
+
+  // Hodisalar
+  regionSel.addEventListener('change', () => loadDistricts(regionSel.value));
+  districtSel.addEventListener('change', updatePreview);
+  ['mahalla', 'street', 'house_number', 'apartment'].forEach(name => {
+    const inp = document.querySelector(`input[name="${name}"]`);
+    if (inp) inp.addEventListener('input', updatePreview);
+  });
+
+  // Boshlang'ich yuklash (tahrirlashda yoki POST xatosida)
+  if (regionSel.value) {
+    loadDistricts(regionSel.value, initialDistrict);
+  } else {
+    districtSel.disabled = true;
+  }
+})();
+</script>
+{% endblock %}
