@@ -58,10 +58,17 @@ def register_phone(request):
         form = PhoneRegisterForm(request.POST)
         if form.is_valid():
             phone = form.cleaned_data['phone']
-            send_mock_sms(phone, purpose='register')
+            code = send_mock_sms(phone, purpose='register')
             request.session['register_phone'] = phone
-            messages.info(request, f'Tasdiqlash kodi {phone} raqamiga yuborildi. '
-                                   'Kodni terminalga qarang (mock rejim).')
+            # DEMO rejim — kodni foydalanuvchiga to'g'ridan-to'g'ri ko'rsatamiz
+            messages.success(
+                request,
+                f'📱 [DEMO] Sizning tasdiqlash kodingiz: {code}'
+            )
+            messages.info(
+                request,
+                f'Telefon raqami: {phone}. Kodni quyidagi maydonga kiriting.'
+            )
             return redirect('register_confirm')
     else:
         form = PhoneRegisterForm()
@@ -137,9 +144,17 @@ def password_reset(request):
         form = PasswordResetPhoneForm(request.POST)
         if form.is_valid():
             phone = form.cleaned_data['phone']
-            send_mock_sms(phone, purpose='reset')
+            code = send_mock_sms(phone, purpose='reset')
             request.session['reset_phone'] = phone
-            messages.info(request, 'Tasdiqlash kodi yuborildi (terminalga qarang).')
+            # DEMO rejim — kodni foydalanuvchiga to'g'ridan-to'g'ri ko'rsatamiz
+            messages.success(
+                request,
+                f'📱 [DEMO] Sizning tasdiqlash kodingiz: {code}'
+            )
+            messages.info(
+                request,
+                f'Telefon raqami: {phone}. Kodni quyidagi maydonga kiriting.'
+            )
             return redirect('password_reset_confirm')
     else:
         form = PasswordResetPhoneForm()
