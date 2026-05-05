@@ -103,19 +103,8 @@ if IS_PRODUCTION:
     DEBUG = False
     SECRET_KEY = _os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
 
-    # ----- ALLOWED_HOSTS -----
-    ALLOWED_HOSTS = []
-    if _os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
-        ALLOWED_HOSTS.append(_os.environ['RENDER_EXTERNAL_HOSTNAME'])
-    if _os.environ.get('FLY_APP_NAME'):
-        ALLOWED_HOSTS.append(f"{_os.environ['FLY_APP_NAME']}.fly.dev")
-    if _os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
-        ALLOWED_HOSTS.append(_os.environ['RAILWAY_PUBLIC_DOMAIN'])
-    # Custom domen yoki fallback
-    if _os.environ.get('CUSTOM_DOMAIN'):
-        ALLOWED_HOSTS.append(_os.environ['CUSTOM_DOMAIN'])
-    if not ALLOWED_HOSTS:
-        ALLOWED_HOSTS = ['*']
+    # ----- ALLOWED_HOSTS — barcha hostlarni qabul qilish (demo uchun) -----
+    ALLOWED_HOSTS = ['*']
 
     # ----- CSRF -----
     CSRF_TRUSTED_ORIGINS = [
@@ -131,8 +120,11 @@ if IS_PRODUCTION:
     _db_url = _os.environ.get('DATABASE_URL')
     if _db_url:
         # Render / Railway — PostgreSQL beradi
-        import dj_database_url
-        DATABASES['default'] = dj_database_url.parse(_db_url, conn_max_age=600)
+        try:
+            import dj_database_url
+            DATABASES['default'] = dj_database_url.parse(_db_url, conn_max_age=600)
+        except ImportError:
+            pass
     elif _os.environ.get('FLY_APP_NAME'):
         # Fly.io — SQLite + Volume
         DATABASES['default']['NAME'] = '/data/db.sqlite3'
@@ -140,17 +132,17 @@ if IS_PRODUCTION:
     # ----- STATIC FILES (WhiteNoise) -----
     if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
         MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # CompressedStaticFilesStorage — Manifest emas! (xatolarni oldini oladi)
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
     # ----- MEDIA -----
     if _os.environ.get('FLY_APP_NAME'):
         MEDIA_ROOT = '/data/media'
 
-    # ----- SECURITY (production tavsiyalari) -----
+    # ----- SECURITY -----
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-
